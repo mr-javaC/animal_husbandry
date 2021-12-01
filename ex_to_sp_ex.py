@@ -24,10 +24,10 @@ group_list = np.unique(np_array[:, 2:3])  # получаем уникальны�
 # bin_count=len(group_list)# получаем количество групп животных
 # print(bin_count)
 
-day = '31'
-month_num = '10'
+day = '30'
+month_num = '11'
 year = '21'
-last_date = 'на "31" сентября 2021г.'
+last_date = 'на "31" октября 2021г.'
 
 count_page = 1  # счетчик страниц
 
@@ -186,6 +186,8 @@ for group_s in group_list:
     # Выбытие
     np_array_disposal_filter = np_array_disposal[np.in1d(
         np_array_disposal[:, 2], group_s)]  # фильтр данных по группе выбывших
+    
+    print(np_array_disposal_filter)
 
     # ПРОДАННЫХ ГОЛОВ в течении месяца
     heads_sold_1 = int(np.sum(np_array_disposal_filter[:, 4:5]))
