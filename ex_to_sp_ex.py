@@ -12,6 +12,12 @@ trend = input('Введите направление животных (МКРС/
 df = pd.read_excel(name + ' перевеска.xlsx', 'перевеска')
 np_array = df.to_numpy()
 
+df_balance_at_the_beginning_of_the_month  = pd.read_excel(name + ' перевеска.xlsx', 'остаток на начало месяца')
+np_array_balance_at_the_beginning_of_the_month = df_balance_at_the_beginning_of_the_month.fillna(0).to_numpy()
+
+df_coming = pd.read_excel(name + ' перевеска.xlsx', 'приход')
+np_acoming = df_coming.fillna(0).to_numpy()
+
 df_disposal = pd.read_excel(name + ' перевеска.xlsx', 'выбытие')
 np_array_disposal = df_disposal.fillna(0).to_numpy()
 
@@ -24,10 +30,10 @@ group_list = np.unique(np_array[:, 2:3])  # получаем уникальны�
 # bin_count=len(group_list)# получаем количество групп животных
 # print(bin_count)
 
-day = '30'
-month_num = '11'
-year = '21'
-last_date = 'на "31" октября 2021г.'
+day = '31'
+month_num = '01'
+year = '22'
+last_date = 'на "31" декабря 2021г.'
 
 count_page = 1  # счетчик страниц
 
@@ -161,22 +167,40 @@ for group_s in group_list:
 
     # Остаток на начало месяца
     sheet_sp_44_1['G'+str(count_page + 16)] = group_s
-    rest_of_heads = int(
-        input('Введите ОСТАТОК ГОЛОВ на начало месяца ' + group_s + ': '))
-    remainder_kilogram_1 = int(
-        input('Введите ОСТАТОК ЖИВОЙ МАССЫ на начало месяца ' + group_s + ': '))
+    # голов выбранной группы
+    rest_of_heads = int(np_array_balance_at_the_beginning_of_the_month[np.in1d(
+        np_array_balance_at_the_beginning_of_the_month[:, 1], group_s)][:, 2:3])
+    # живой массы выбранной группы
+    remainder_kilogram_1 = int(np_array_balance_at_the_beginning_of_the_month[np.in1d(
+        np_array_balance_at_the_beginning_of_the_month[:, 1], group_s)][:, 3:4])
     sheet_sp_44_1['H'+str(count_page + 16)] = rest_of_heads
-    sheet_sp_44_1['I'+str(count_page + 16)] = remainder_kilogram_1
+    sheet_sp_44_1['I'+str(count_page + 16)] = remainder_kilogram_1 
 
     # Поступление
-    heads_receivedint_1 = int(
-        (input('Введите ПОСТУПЛЕНИЕ ГОЛОВ в течении месяца ' + group_s + ': ')))
-    received_kilogram_1 = int(
-        (input('Введите ПОСТУПЛЕНИЕ ЖИВОЙ МАССЫ в течении месяца ' + group_s + ': ')))
-    heads_receivedint_2 = int(
-        (input('Введите ПОСТУПЛЕНИЕ ГОЛОВ после перевески ' + group_s + ': ')))
-    received_kilogram_2 = int(
-        (input('Введите ПОСТУПЛЕНИЕ ЖИВОЙ МАССЫ после перевески ' + group_s + ': ')))
+    # голов выбранной группы в течении месяца
+    offspring_heads_1 = int(np.sum(np_acoming[np.in1d(
+        np_acoming[:, 2], group_s)][:, 4:5])) # приплод голов в течении месяца
+    transference_heads_1 = int(np.sum(np_acoming[np.in1d(
+        np_acoming[:, 2], group_s)][:, 8:9])) # переведено голов в течении месяца
+    heads_receivedint_1 = offspring_heads_1 + transference_heads_1 
+    # живой массы выбранной группы в течении месяца
+    offspring_kilogram_1 = int(np.sum(np_acoming[np.in1d(
+        np_acoming[:, 2], group_s)][:, 5:6])) # приплод килограмм в течении месяца
+    transference_kilogram_1 = int(np.sum(np_acoming[np.in1d(
+        np_acoming[:, 2], group_s)][:, 9:10])) # переведено килограмм в течении месяца
+    received_kilogram_1 = offspring_kilogram_1 + transference_kilogram_1
+    # голов выбранной группы после перевески
+    offspring_heads_2 = int(np.sum(np_acoming[np.in1d(
+        np_acoming[:, 2], group_s)][:, 6:7])) # приплод голов после перевески
+    transference_heads_2 = int(np.sum(np_acoming[np.in1d(
+        np_acoming[:, 2], group_s)][:, 10:11])) # переведено голов после перевески
+    heads_receivedint_2 = offspring_heads_2 + transference_heads_2
+    # живой массы выбранной группы после перевески
+    offspring_kilogram_2 = int(np.sum(np_acoming[np.in1d(
+        np_acoming[:, 2], group_s)][:, 7:8])) # приплод килограмм после перевески
+    transference_kilogram_2 = int(np.sum(np_acoming[np.in1d(
+        np_acoming[:, 2], group_s)][:, 11:12])) # переведено килограмм после перевески
+    received_kilogram_2 = offspring_kilogram_2 + transference_kilogram_2
 
     sheet_sp_44_1['J'+str(count_page + 16)
                   ] = heads_receivedint_1 + heads_receivedint_2
@@ -236,6 +260,47 @@ for group_s in group_list:
         transfer_kilogram_2 + kilogram_scored_1 + \
         kilogram_scored_2 + ordered_kilogram_1 + ordered_kilogram_2
     sheet_sp_44_1['M'+str(count_page + 16)] = out
+    
+    # Выбытие
+    
+    count_recipient = 1 # счётчик получателя
+    group_recipient = np.unique(np_array_transference[:, 4:5])  # получаем уникальных получателей
+    
+    for recipient in group_recipient:
+        count_line = 1  # счётчик строк
+        np_array_transference_filter = np_array_transference[np.in1d(np_array_transference[:, 4:5], recipient)]
+        df_filter_recipient_group_s = np_array_transference_filter[np.in1d(np_array_transference_filter[:, 2:3], group_s)]
+        
+        for data_transf in df_filter_recipient_group_s:
+            if count_line < 49:
+                sheet_sp_47 = wb['47 ' + str(count_recipient) + ' 1']
+                sheet_sp_47['C7'] = trend
+                sheet_sp_47['B11'] = month
+                sheet_sp_47['B12'] = recipient
+                sheet_sp_47['B13'] = name
+                sheet_sp_47['O8'] = day
+                sheet_sp_47['P8'] = month_num
+                sheet_sp_47['Q8'] = year
+                
+                sheet_sp_47['A'+str(18 + count_line)] = data_transf[1]
+                sheet_sp_47['B'+str(18 + count_line)] = data_transf[2]
+                sheet_sp_47['G'+str(18 + count_line)] = count_line
+                sheet_sp_47['H'+str(18 + count_line)] = data_transf[3]
+                count_line += 1
+            elif 48 < count_line < 101:
+                sheet_sp_47 = wb['47 ' + str(count_recipient) + ' 2']
+                sheet_sp_47['A'+str(count_line - 48)] = data_transf[1]
+                sheet_sp_47['B'+str(count_line - 48)] = data_transf[2]
+                sheet_sp_47['J'+str(count_line - 48)] = count_line
+                sheet_sp_47['L'+str(count_line - 48)] = data_transf[3]
+                #sheet_sp_47['D71'] = day
+                #sheet_sp_47['F71'] = month
+                #sheet_sp_47['L71'] = year              
+                count_line += 1
+                
+        count_recipient += 1
+                  
+        
 
     # Падеж
     # ПАДЕЖ ГОЛОВ в течении месяца
